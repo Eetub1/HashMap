@@ -1,7 +1,7 @@
 const { LinkedList } = require('./linkedlist.js')
 
 class HashMap {
-    constructor(loadFactor, capacity) {
+    constructor(loadFactor=0.75, capacity=16) {
         this.loadFactor = loadFactor
         this.capacity = capacity
         this.currentLoad = 0
@@ -11,16 +11,21 @@ class HashMap {
         this.originalCapacity = capacity
     }
 
+    //this isnt working properly right now
+    //keys need to be rehashed
     growBuckets() {
         const newArr = []
-        newArr.length = this.capacity * 2
-        for (let i = 0; i < this.capacity; i++) {
-            if (this.buckets[i] !== undefined) {
-                newArr[i] = this.buckets[i]
+        this.capacity *= 2
+        newArr.length = this.capacity
+        for (let i = 0; i < this.buckets.length; i++) {
+            if (this.buckets[i] === undefined) continue
+            const list = this.buckets[i]
+            let current = list.head()
+            while (current) {
+                //
             }
         }
         this.buckets = newArr
-        this.capacity *= 2
     }
 
     hash(key) {
@@ -29,13 +34,13 @@ class HashMap {
         for (let i = 0; i < key.length; i++) {
         hashCode = primeNumber * hashCode + key.charCodeAt(i);
         }
-        return hashCode % this.buckets.length;
+        return hashCode % this.capacity;
     }
 
     set(key, value) {
         const index = this.hash(key)
-        //console.log(index)
-        if (index < 0 || index >= this.buckets.length) {
+        console.log(index)
+        if (index < 0 || index >= this.capacity) {
             throw new Error("Trying to access index out of bounds");
         }
         if (this.buckets[index] === undefined) {
@@ -44,6 +49,9 @@ class HashMap {
             this.buckets[index] = list
             this.currentLoad++
             this.keysCount++
+            if (this.currentLoad / this.capacity >= this.loadFactor) {
+                this.growBuckets()
+            }
         } else {
             const list = this.buckets[index]
             const containsKey = list.contains(key)
@@ -52,22 +60,20 @@ class HashMap {
                 while (current) {
                     if (current.value.key === key) {
                         current.value.value = value
-                        break
+                        return
                     }
+                    current = current.nextNode
                 }
             } else {
                 list.append({key, value})
                 this.keysCount++
             }
         }
-        if (this.currentLoad / this.capacity >= this.loadFactor) {
-            this.growBuckets()
-        }
     }
 
     get(key) {
         const index = this.hash(key)
-        if (index < 0 || index >= this.buckets.length) {
+        if (index < 0 || index >= this.capacity) {
             throw new Error("Trying to access index out of bounds");
         }
         if (this.buckets[index] === undefined) return null
@@ -83,7 +89,7 @@ class HashMap {
 
     has(key) {
         const index = this.hash(key)
-        if (index < 0 || index >= this.buckets.length) {
+        if (index < 0 || index >= this.capacity) {
             throw new Error("Trying to access index out of bounds");
         }
         if (this.buckets[index] === undefined) return false
@@ -104,13 +110,12 @@ class HashMap {
         }
         if (this.buckets[index] === undefined) return false
         const list = this.buckets[index]
-        //täälläkin vois hyödyntää valmiita metodeja? tai ehkä ei! muahahahah
         let current = list.head()
         let i = 0
         while (current) {
             if (current.value.key === key) {
                 list.removeAt(i)
-                if (list.size() === 1) this.currentLoad--
+                if (list.size() === 0) this.currentLoad--
                 this.keysCount--
                 return true
             }
@@ -179,6 +184,7 @@ class HashMap {
 }
 
 function main() {
+
     const test = new HashMap(0.75, 16)
     test.set('apple', 'red')
     test.set('banana', 'yellow')
@@ -193,45 +199,16 @@ function main() {
     test.set('kite', 'pink')
     test.set('lion', 'golden')
     test.set('carrot', 'blorange')
+
+    console.log()
     console.log("Load: ", test.currentLoad)
     console.log("Current length: ", test.buckets.length)
-    console.log("Is there an apple? ", test.has("apple"))
     console.log()
 
-    console.log("Every item: ")
-    test.show()
-    console.log("Avainten määrä: ", test.length())
-    console.log()
-
-    console.log(test.remove("kite"))
-    test.show()
-    console.log("Avainten määrä: ", test.length())
-    console.log()
-
-    test.set('kite', 'pink')
-    test.show()
-    console.log("Avainten määrä: ", test.length())
-
-    console.log("Avaimet: ", test.keys())
-    console.log("Arvot: ", test.values())
-    console.log("Avaimet ja arvot: ", test.entries())
-
-    /*test.clear()
-    console.log("Load: ", test.currentLoad)
-    console.log("Current length: ", test.buckets.length)
-    test.show()*/
-
-
-    /*test.set("jasatekko", "jotain")
+    test.set("jasatekko", "jotain")
     test.set("eethuy", "juuso")
     console.log("Load: ", test.currentLoad)
     console.log("Current length: ", test.buckets.length)
-    console.log()
-
-    console.log(test.get("carrot"))
-    console.log(test.get("apple"))
-    console.log("Is there an apple? ", test.has("apple"))*/
-
 }
 
 main()
