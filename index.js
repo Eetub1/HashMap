@@ -46,11 +46,18 @@ class HashMap {
             const containsKey = list.contains(key)
             if (containsKey) {
                 console.log("Täällä pitäisi vaihtaa arvo")
+                let current = list.head()
+                while (current) {
+                    if (current.value.key === key) {
+                        current.value.value = value
+                        break
+                    }
+                }
             } else {
                 console.log("Täällä pitäisi lisätä arvo listan loppuun")
+                list.append({key, value})
             }
         }
-
         if (this.currentLoad / this.capacity >= this.loadFactor) {
             this.growBuckets()
         }
