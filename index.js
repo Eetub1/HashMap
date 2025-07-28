@@ -13,19 +13,24 @@ class HashMap {
 
     //this isnt working properly right now
     //keys need to be rehashed
-    growBuckets() {
+    resize() {
+        const prevCapacity = this.buckets.length
+        const bucketsOld = this.buckets
+
         const newArr = []
         this.capacity *= 2
         newArr.length = this.capacity
-        for (let i = 0; i < this.buckets.length; i++) {
-            if (this.buckets[i] === undefined) continue
-            const list = this.buckets[i]
+        this.buckets = newArr
+
+        for (let i = 0; i < prevCapacity; i++) {
+            if (bucketsOld[i] === undefined) continue
+            const list = bucketsOld[i]
             let current = list.head()
             while (current) {
-                //
+                this.set(current.value.key, current.value.value, false)
+                current = current.nextNode
             }
         }
-        this.buckets = newArr
     }
 
     hash(key) {
@@ -37,7 +42,7 @@ class HashMap {
         return hashCode % this.capacity;
     }
 
-    set(key, value) {
+    set(key, value, trackChanges=true) {
         const index = this.hash(key)
         console.log(index)
         if (index < 0 || index >= this.capacity) {
@@ -47,10 +52,12 @@ class HashMap {
             const list = new LinkedList()
             list.append({key, value})
             this.buckets[index] = list
-            this.currentLoad++
-            this.keysCount++
-            if (this.currentLoad / this.capacity >= this.loadFactor) {
-                this.growBuckets()
+            if (trackChanges) {
+                this.currentLoad++
+                this.keysCount++
+                if (this.currentLoad / this.capacity >= this.loadFactor) {
+                    this.resize()
+                }
             }
         } else {
             const list = this.buckets[index]
@@ -66,7 +73,7 @@ class HashMap {
                 }
             } else {
                 list.append({key, value})
-                this.keysCount++
+                if (trackChanges) this.keysCount++
             }
         }
     }
@@ -115,7 +122,10 @@ class HashMap {
         while (current) {
             if (current.value.key === key) {
                 list.removeAt(i)
-                if (list.size() === 0) this.currentLoad--
+                if (list.size() === 0) {
+                    this.currentLoad--
+                    this.buckets[index] = undefined
+                }
                 this.keysCount--
                 return true
             }
